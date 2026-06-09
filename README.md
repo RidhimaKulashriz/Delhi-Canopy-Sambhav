@@ -1,13 +1,20 @@
-# 🌳 DelhiCanopy  
+#  DelhiCanopy  
 ### AI Command Center for Urban Green Intelligence
 
 DelhiCanopy is an AI-powered urban climate intelligence platform designed to help governments, planners, and environmental agencies **monitor, analyze, and optimize urban green infrastructure** using geospatial data, machine learning, and predictive analytics.
 
 The system transforms fragmented environmental data into **actionable insights** for tackling heat stress, air pollution, and green cover loss in dense cities like Delhi.
 
+![Satellite Data](https://img.shields.io/badge/Satellite-Imagery-0ea5e9?style=for-the-badge)
+![Computer Vision](https://img.shields.io/badge/Computer-Vision-red?style=for-the-badge)
+![Predictive Analytics](https://img.shields.io/badge/Predictive-Analytics-blueviolet?style=for-the-badge)
+![Machine Learning](https://img.shields.io/badge/Machine-Learning-orange?style=for-the-badge)
+![GIS](https://img.shields.io/badge/GIS-Enabled-success?style=for-the-badge)
+![Decision Intelligence](https://img.shields.io/badge/Decision-Intelligence-purple?style=for-the-badge)
+
 ---
 
-## 🚨 Problem Statement
+##  Problem Statement
 
 Urban cities such as Delhi face:
 
@@ -41,36 +48,36 @@ The platform is designed for **government-scale deployment**, while remaining ex
 
 ---
 
-## 🧠 Core Features
+##  Core Features
 
-### 🌿 Green Cover Intelligence
+###  Green Cover Intelligence
 - Ward-level vegetation density analysis
 - NDVI-based green health scoring
 - Temporal change detection
 
-### 🔥 Urban Heat Stress Mapping
+###  Urban Heat Stress Mapping
 - Land Surface Temperature (LST) analysis
 - Identification of Urban Heat Islands (UHI)
 - Heat-risk zoning
 
-### 🚨 Tree Loss & Risk Detection
+###  Tree Loss & Risk Detection
 - Change detection across time-series satellite data
 - Identification of rapid vegetation loss
 - Risk zone classification
 
-### 📊 AI-Powered Decision Support
+###  AI-Powered Decision Support
 - Priority scoring for plantation zones
 - Estimated heat reduction impact
 - Actionable recommendations for planners
 
-### 🗺 Interactive Command Dashboard
+### Interactive Command Dashboard
 - Map-based visualization
 - Layer toggles (green cover, heat, risk)
 - Policy-ready insights
 
 ---
 
-## 🧠 Role of AI & ML
+##  Role of AI & ML
 
 DelhiCanopy uses AI to handle the **complex, multi-variable nature of urban climate systems**, which are impossible to manage manually at city scale.
 
@@ -91,7 +98,7 @@ This agent-based approach ensures decisions are **traceable, explainable, and au
 ---
 
 
-## 🧠 System Architecture 
+##  System Architecture 
 
 ```text
 Satellite & Climate Data
@@ -103,25 +110,21 @@ Satellite & Climate Data
  Decision Intelligence Engine
         ↓
  Interactive Smart City Dashboard
-<<<<<<< HEAD
- text```
- 
 
-=======
 ```
->>>>>>> c55beb20c9b3bdeb8659f3954893aab4b4ffcb83
+ 
 ---
 
 
-## 🧪 Current Project Status
+##  Current Project Status
 
-### ✅ Implemented (MVP)
+###  Implemented (MVP)
 - Fully functional frontend dashboard
 - Interactive map-based UI
 - Climate intelligence visualization
 - Modular architecture ready for backend integration
 
-### 🚧 In Progress / Planned
+###  In Progress / Planned
 - Real satellite data ingestion
 - NDVI & heat model inference
 - Backend APIs (FastAPI)
@@ -133,7 +136,7 @@ Satellite & Climate Data
 
 ---
 
-## 🛠 Tech Stack
+##  Tech Stack
 
 ### Frontend
 - Next.js
@@ -159,7 +162,7 @@ Satellite & Climate Data
 
 ---
 
-## 🚀 Installation & Local Development
+##  Installation & Local Development
 
 ### Prerequisites
 
@@ -359,7 +362,7 @@ Delhi-Canopy-Sambhav/
 
 ---
 
-## 🌍 Impact & Use Cases
+##  Impact & Use Cases
 
 ### For Government & Planners
 - Data-backed plantation planning
@@ -377,7 +380,7 @@ Moves urban governance from:
 
 ---
 
-## 🚀 Future Scope
+##  Future Scope
 
 - IoT-based air quality sensors
 - Drone-based green cover mapping
@@ -387,7 +390,7 @@ Moves urban governance from:
 
 ---
 
-## 📌 Disclaimer
+##  Disclaimer
 
 DelhiCanopy is developed as part of an innovation and hackathon initiative.  
 Data sources and AI models may use simulated datasets in early stages and are designed to be replaceable with real-world integrations.
