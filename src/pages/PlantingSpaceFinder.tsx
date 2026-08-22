@@ -10,7 +10,15 @@ import { FloatingAIAssistant } from "@/components/ai/FloatingAIAssistant";
 import { Navigation } from "@/components/layout/Navigation";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { cn } from "@/lib/utils";
-import { gateStatus, plantingSites, qualityGate, siteScore } from "@/lib/plantingDecision";
+import {
+  assessEvidenceCredibility,
+  credibilityGateStatus,
+  EvidenceAssessment,
+  gateStatus,
+  plantingSites,
+  qualityGate,
+  siteScore,
+} from "@/lib/plantingDecision";
 
 const implementationStages = [
   { icon: MapPinned, title: "1. Confirm the space", detail: "Walk the candidate boundary, identify the land custodian, and record access constraints." },
@@ -35,14 +43,27 @@ export default function PlantingSpaceFinder() {
       return legacyChecks.length > 0 ? { [plantingSites[0].id]: legacyChecks } : {};
     } catch { return {}; }
   });
+  const [assessmentsBySite, setAssessmentsBySite] = useState<Record<string, Record<string, EvidenceAssessment>>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("delhi-canopy-evidence-credibility") || "{}");
+    } catch {
+      return {};
+    }
+  });
   const selected = plantingSites.find((site) => site.id === selectedId) ?? plantingSites[0];
   const checked = checksBySite[selected.id] ?? [];
+  const assessments = assessmentsBySite[selected.id] ?? {};
   const status = gateStatus(checked);
+  const credibility = credibilityGateStatus(checked, assessments);
   const ranking = useMemo(() => [...plantingSites].sort((a, b) => siteScore(b) - siteScore(a)), []);
 
   useEffect(() => {
     localStorage.setItem("delhi-canopy-quality-gates", JSON.stringify(checksBySite));
   }, [checksBySite]);
+
+  useEffect(() => {
+    localStorage.setItem("delhi-canopy-evidence-credibility", JSON.stringify(assessmentsBySite));
+  }, [assessmentsBySite]);
 
   const toggle = (id: string) => setChecksBySite((current) => {
     const currentChecks = current[selected.id] ?? [];
@@ -50,8 +71,18 @@ export default function PlantingSpaceFinder() {
     return { ...current, [selected.id]: updatedChecks };
   });
 
+  const updateEvidenceNote = (itemId: string, note: string) => {
+    setAssessmentsBySite((current) => ({
+      ...current,
+      [selected.id]: {
+        ...(current[selected.id] ?? {}),
+        [itemId]: assessEvidenceCredibility(note, selected, qualityGate.find((item) => item.id === itemId)!),
+      },
+    }));
+  };
+
   const copyBrief = async () => {
-    const brief = `${selected.name}\nPriority score: ${siteScore(selected)}/100\nStatus: ${statusCopy[selected.status].label}\nRecommended form: ${selected.recommendedForm}\nField evidence: ${status.requiredComplete}/${status.requiredTotal} required checks complete.\nNext action: ${selected.ownershipLead}`;
+    const brief = `${selected.name}\nPriority score: ${siteScore(selected)}/100\nStatus: ${statusCopy[selected.status].label}\nRecommended form: ${selected.recommendedForm}\nField evidence: ${status.requiredComplete}/${status.requiredTotal} required checks complete.\nCredibility: ${credibility.credibleRequired}/${credibility.requiredTotal} required records credible.\nNext action: ${selected.ownershipLead}`;
     try {
       await navigator.clipboard.writeText(brief);
       toast.success("Field brief copied to clipboard");
@@ -78,7 +109,7 @@ export default function PlantingSpaceFinder() {
             <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-tech">
               <span className="rounded-full border border-secondary/30 bg-secondary/10 px-3 py-1 text-secondary">{plantingSites.length} candidate spaces</span>
               <span className="rounded-full border border-border/60 bg-card/50 px-3 py-1 text-muted-foreground">No recommendation is a planting permit</span>
-              <span className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-primary">Repeatable quality gate enabled</span>
+              <span className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-primary">Evidence Credibility AI enabled</span>
             </div>
           </motion.div>
 
@@ -126,10 +157,19 @@ export default function PlantingSpaceFinder() {
             </div>
 
             <GlassCard className="p-5 h-fit">
-              <div className="flex items-start gap-3"><div className={cn("mt-0.5 rounded-lg p-2", status.complete ? "bg-primary/15 text-primary" : "bg-warning/15 text-warning")}><ClipboardCheck className="w-5 h-5" /></div><div><p className="text-xs font-tech text-muted-foreground">CONTENT QUALITY GATE</p><h2 className="font-display font-semibold">Evidence before action</h2><p className="mt-1 text-xs text-muted-foreground">{status.requiredComplete}/{status.requiredTotal} required field checks complete</p></div></div>
-              <div className="mt-5 space-y-3">{qualityGate.map((item) => { const done = checked.includes(item.id); return <button key={item.id} onClick={() => toggle(item.id)} className={cn("w-full flex gap-3 rounded-lg border p-3 text-left transition-colors", done ? "border-primary/40 bg-primary/10" : "border-border/50 bg-card/25 hover:border-secondary/40")}><span className={cn("mt-0.5 h-5 w-5 shrink-0 rounded border flex items-center justify-center", done ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/50")} >{done && <CheckCircle2 className="w-3.5 h-3.5" />}</span><span><span className="flex gap-1 items-center text-xs font-display font-semibold">{item.label}{item.required && <span className="text-destructive">*</span>}</span><span className="mt-1 block text-[10px] leading-relaxed text-muted-foreground">Evidence: {item.evidence}</span></span></button>; })}</div>
-              <div className={cn("mt-5 rounded-lg border p-4", status.complete ? "border-primary/40 bg-primary/10" : "border-warning/40 bg-warning/10")}>
-                {status.complete ? <><CheckCircle2 className="w-5 h-5 text-primary mb-2" /><p className="font-display text-sm font-semibold text-primary">Ready for accountable field review</p><p className="mt-1 text-xs text-muted-foreground">The checklist is complete. Obtain the custodian’s approval before planting.</p></> : <><AlertTriangle className="w-5 h-5 text-warning mb-2" /><p className="font-display text-sm font-semibold text-warning">Do not mark as approved yet</p><p className="mt-1 text-xs text-muted-foreground">Complete all required evidence checks; this tool screens content quality, not legal permission.</p></>}
+              <div className="flex items-start gap-3"><div className={cn("mt-0.5 rounded-lg p-2", credibility.complete ? "bg-primary/15 text-primary" : "bg-warning/15 text-warning")}><ClipboardCheck className="w-5 h-5" /></div><div><p className="text-xs font-tech text-muted-foreground">CONTENT QUALITY + CREDIBILITY GATE</p><h2 className="font-display font-semibold">Evidence before action</h2><p className="mt-1 text-xs text-muted-foreground">{status.requiredComplete}/{status.requiredTotal} checks complete • {credibility.credibleRequired}/{credibility.requiredTotal} required records credible</p></div></div>
+              <div className="mt-5 space-y-3">{qualityGate.map((item) => {
+                const done = checked.includes(item.id);
+                const assessment = assessments[item.id];
+                const verdictLabel = assessment?.verdict === "credible" ? "CREDIBLE" : assessment?.verdict === "review_required" ? "REVIEW REQUIRED" : "ADD DETAIL";
+                const verdictTone = assessment?.verdict === "credible" ? "text-primary border-primary/40 bg-primary/10" : assessment?.verdict === "review_required" ? "text-secondary border-secondary/40 bg-secondary/10" : "text-warning border-warning/40 bg-warning/10";
+                return <div key={item.id} className={cn("rounded-lg border p-3 transition-colors", done ? "border-primary/40 bg-primary/10" : "border-border/50 bg-card/25")}>
+                  <button onClick={() => toggle(item.id)} className="w-full flex gap-3 text-left"><span className={cn("mt-0.5 h-5 w-5 shrink-0 rounded border flex items-center justify-center", done ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/50")} >{done && <CheckCircle2 className="w-3.5 h-3.5" />}</span><span><span className="flex gap-1 items-center text-xs font-display font-semibold">{item.label}{item.required && <span className="text-destructive">*</span>}</span><span className="mt-1 block text-[10px] leading-relaxed text-muted-foreground">Evidence: {item.evidence}</span></span></button>
+                  {done && <div className="mt-3 border-t border-border/40 pt-3"><p className="text-[10px] font-tech text-secondary">EVIDENCE CREDIBILITY AI</p><textarea value={assessment?.note ?? ""} onChange={(event) => updateEvidenceNote(item.id, event.target.value)} placeholder="Add a dated field note or document summary: location, source/custodian, record reference, and verification method." className="mt-2 min-h-20 w-full rounded-md border border-border/60 bg-background/50 px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:border-secondary focus:outline-none" />{assessment && <div className="mt-2"><div className="flex items-center justify-between gap-2"><span className={cn("rounded-full border px-2 py-1 text-[9px] font-tech", verdictTone)}>{verdictLabel}</span><span className="font-display text-sm text-foreground">{assessment.score}/100</span></div><p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">{assessment.signals.join(" • ")}</p></div>}</div>}
+                </div>;
+              })}</div>
+              <div className={cn("mt-5 rounded-lg border p-4", credibility.complete ? "border-primary/40 bg-primary/10" : "border-warning/40 bg-warning/10")}>
+                {credibility.complete ? <><CheckCircle2 className="w-5 h-5 text-primary mb-2" /><p className="font-display text-sm font-semibold text-primary">Ready for accountable field review</p><p className="mt-1 text-xs text-muted-foreground">All mandatory evidence is present and scored credible. Obtain the custodian’s approval before planting.</p></> : <><AlertTriangle className="w-5 h-5 text-warning mb-2" /><p className="font-display text-sm font-semibold text-warning">Do not mark as approved yet</p><p className="mt-1 text-xs text-muted-foreground">Complete each required check and add sufficiently traceable evidence. The AI screens documentation signals, not legal permission.</p></>}
               </div>
               <p className="mt-4 text-[10px] leading-relaxed text-muted-foreground">Source note: {selected.source}</p>
             </GlassCard>
