@@ -1,405 +1,229 @@
-#  DelhiCanopy  
-### AI Command Center for Urban Green Intelligence
+# DelhiCanopy
 
-DelhiCanopy is an AI-powered urban climate intelligence platform designed to help governments, planners, and environmental agencies **monitor, analyze, and optimize urban green infrastructure** using geospatial data, machine learning, and predictive analytics.
+## Urban Green Intelligence and Climate Decision Support
 
-The system transforms fragmented environmental data into **actionable insights** for tackling heat stress, air pollution, and green cover loss in dense cities like Delhi.
+DelhiCanopy is a React-based urban climate intelligence prototype for exploring green-cover conditions, heat stress, tree-loss alerts, planting recommendations, and decision-quality controls in a single operational interface. It is designed to help planners, environmental teams, and reviewers move from environmental signals to documented next actions without presenting a prototype output as an official permit, municipal instruction, or ground-truth finding.
 
-![Satellite Data](https://img.shields.io/badge/Satellite-Imagery-0ea5e9?style=for-the-badge)
-![Computer Vision](https://img.shields.io/badge/Computer-Vision-red?style=for-the-badge)
-![Predictive Analytics](https://img.shields.io/badge/Predictive-Analytics-blueviolet?style=for-the-badge)
-![Machine Learning](https://img.shields.io/badge/Machine-Learning-orange?style=for-the-badge)
-![GIS](https://img.shields.io/badge/GIS-Enabled-success?style=for-the-badge)
-![Decision Intelligence](https://img.shields.io/badge/Decision-Intelligence-purple?style=for-the-badge)
+The application combines a visual command center with route-level analytical views, planting-space screening, evidence credibility controls, and TrustOps: a repeatable quality gate for climate and planting decisions. It runs as a Vite single-page application and remains usable in a deterministic local-preview mode when connected services are unavailable.
 
----
+> **Prototype boundary:** DelhiCanopy is a decision-support prototype. Local-preview records, model-style insights, and screening recommendations are demonstrative. They require field verification, relevant authority review, and applicable permissions before operational use.
 
-##  Problem Statement
+## What Is Implemented
 
-Urban cities such as Delhi face:
+The current MVP contains a working set of connected decision workflows rather than static screens. The table below distinguishes the major capabilities from their intended operational role.
 
-- Extreme **heat waves and urban heat islands**
-- Rapid **loss of green cover due to construction**
-- **Uneven plantation efforts** with little data-backed planning
-- Fragmented monitoring systems with **no predictive intelligence**
+| Capability | Current behavior | Important boundary |
+| --- | --- | --- |
+| Command Center | Renders climate, green-cover, alert, map, and decision-summary views; supports direct handoff to detailed analysis routes. | Local preview data is clearly labelled when connected data is unavailable. |
+| Green Intelligence | Presents ward-level green-cover metrics, priority views, charts, and vegetation-oriented analysis. | It is an analytical view, not a satellite-data validation service. |
+| Heat Stress | Presents heat-risk indicators, ranking, and climate-trend views. | Values in preview mode are demonstration data. |
+| Tree Loss Detection | Shows tree-loss alerts, before/after comparison state, hotspots, and selectable alert records. | Alerts require investigation; they are not enforcement determinations. |
+| AI Planner | Produces deterministic planting-strategy packets, exposes a usable ward selector, and opens a full implementation brief. | Planning outputs do not replace a site survey or land approval. |
+| Planting Space Finder | Ranks preliminary candidate spaces, maintains per-site evidence checks, calculates credibility readiness, and copies field briefs. | A screening result is not a planting permit or land-allocation decision. |
+| TrustOps Quality Command | Holds a decision until evidence, credibility, red-team challenges, reviewer assignment, approval, and an audit receipt are complete. | It evaluates workflow completeness, not legal compliance or model truth. |
+| Reports | Generates built-in and custom local reports, creates downloadable CSV files, and provides a browser-print flow. | Printing uses the browser's native print dialog and must be completed manually. |
+| Governance | Validates and stores a local grievance draft with a visible receipt. | The prototype does not transmit grievances to a government system. |
+| Canopy AI assistant | Provides connected-service responses when available and deterministic local-preview responses otherwise. | Local-preview replies are demonstrative and clearly identified. |
 
-Despite large-scale plantation drives, there is **no centralized, AI-driven system** that answers:
+## Application Routes
 
-- Where should trees be planted first?
-- Which areas face the highest heat risk?
-- Where is illegal tree loss happening?
-- What is the real impact of green cover on urban heat?
+Every route is reachable from the persistent application navigation. The command center includes additional contextual handoffs to the relevant detailed routes.
 
-DelhiCanopy addresses this gap by treating **urban greening as a data and intelligence problem**, not just a policy action.
+| Route | Purpose |
+| --- | --- |
+| `/` | Command Center with map, metrics, insights, alert feed, and cross-route actions. |
+| `/green-intelligence` | Green-cover intelligence and vegetation-priority analysis. |
+| `/heat-stress` | Heat stress, vulnerability, and trend analysis. |
+| `/tree-loss` | Tree-loss alerts, incident comparison, and hotspot visualization. |
+| `/ai-planner` | Ward-specific planting strategy generation and implementation briefs. |
+| `/planting-space-finder` | Candidate planting-space screening, evidence checks, credibility readiness, and field-brief copy. |
+| `/trustops` | Repeatable decision-quality gate with evidence, review, release, reset, and audit receipt states. |
+| `/reports` | CSV exports, report print packets, and custom report generation. |
+| `/governance` | Local-only, validated grievance-draft workflow. |
+| `/how-it-works` | Product explanation, architecture framing, and prototype boundaries. |
 
----
+## TrustOps: Repeatable Decision Quality Gate
 
-## 💡 Solution Overview
+TrustOps is the Round 2 quality-control workflow. It makes the state of an important climate or planting decision inspectable before it is presented as ready for field review. The gate is deterministic, interactive, and persists per decision in browser storage for repeatable demonstrations.
 
-DelhiCanopy functions as a **Geo-Spatial AI Command Center** that:
+| Stage | Gate behavior | Demonstrable output |
+| --- | --- | --- |
+| Decision selection | Selects a tracked climate or planting decision. | A decision-specific quality state. |
+| Evidence capture | Tracks required evidence records and credibility notes. | Credibility score and missing-evidence signal. |
+| Red-team challenge | Requires utility, maintenance, or implementation objections to be resolved. | Challenge status with documented resolution. |
+| Accountable review | Assigns a named reviewer before release. | Reviewer-ready state. |
+| Release control | Prevents approval until the required readiness conditions are met. | Held or approved decision state. |
+| Audit receipt | Generates a portable decision receipt after release. | Copyable audit artifact and timeline. |
 
-- Monitors green cover density using satellite imagery
-- Maps urban heat stress across wards
-- Detects vegetation loss and deforestation risks
-- Generates AI-driven plantation strategies
-- Provides a visual, map-based decision dashboard
+For a concise demonstration sequence, use **Load Winning Demo** on `/trustops`, show the transition to `100/100`, approve the field review, copy the receipt, then reset the decision to show that the gate holds it again. See [TrustOps demonstration guidance](./TRUSTOPS_DEMO.md) and the [Round 2 demo script](./ROUND2_DEMO_SCRIPT.md).
 
-The platform is designed for **government-scale deployment**, while remaining explainable and auditable.
+## Data Modes and Reliability Design
 
----
+DelhiCanopy is designed to prefer connected data while remaining demonstrable without an active backend. The UI labels the active mode so a reviewer can distinguish a connected response from a local-preview packet.
 
-##  Core Features
+| Mode | When it is used | What the application does |
+| --- | --- | --- |
+| `live` | Connected status and data queries succeed. | Uses the connected service response. |
+| `local-preview` | Connected services are unavailable, unseeded, or incomplete. | Uses deterministic local records for dashboard, reporting, planning, and assistant workflows. |
+| `unavailable` | Neither a usable connected response nor a complete fallback packet is available. | Surfaces an unavailable state instead of inventing a successful result. |
 
-###  Green Cover Intelligence
-- Ward-level vegetation density analysis
-- NDVI-based green health scoring
-- Temporal change detection
+The local-preview mode supports practical demonstrations of the command center, reports, AI planner, assistant, planting workflows, and TrustOps. It is not a claim that the local data represents current field conditions. The reproducible audit findings are maintained in [FEATURE_RELIABILITY_AUDIT.md](./FEATURE_RELIABILITY_AUDIT.md).
 
-###  Urban Heat Stress Mapping
-- Land Surface Temperature (LST) analysis
-- Identification of Urban Heat Islands (UHI)
-- Heat-risk zoning
+## Reports and Exports
 
-###  Tree Loss & Risk Detection
-- Change detection across time-series satellite data
-- Identification of rapid vegetation loss
-- Risk zone classification
+The Reports route supports a built-in set of environmental and planning report types. Each report exports a real CSV file using the available connected data or the local-preview packet. The custom-report action creates a ready report card that uses the same export path.
 
-###  AI-Powered Decision Support
-- Priority scoring for plantation zones
-- Estimated heat reduction impact
-- Actionable recommendations for planners
+| Report function | Expected result |
+| --- | --- |
+| Built-in CSV export | Downloads a structured CSV file for the selected report type. |
+| Custom report | Creates a local `Climate Decision Readiness Summary` packet and enables its CSV export. |
+| Print report | Opens a print-ready browser flow; completion occurs in the browser or operating-system print dialog. |
 
-### Interactive Command Dashboard
-- Map-based visualization
-- Layer toggles (green cover, heat, risk)
-- Policy-ready insights
+The reliability audit confirmed both CSV generation and downloaded artifact contents in local-preview mode. Do not treat a CSV export as an official government report without appropriate data provenance and review.
 
----
+## Technology Stack
 
-##  Role of AI & ML
+DelhiCanopy uses the following implemented stack.
 
-DelhiCanopy uses AI to handle the **complex, multi-variable nature of urban climate systems**, which are impossible to manage manually at city scale.
+| Layer | Technology |
+| --- | --- |
+| Frontend | React 18, TypeScript, Vite 5 |
+| Routing | React Router DOM |
+| UI | Tailwind CSS, Radix UI primitives, shadcn-style components, Lucide icons, Sonner |
+| State and data | TanStack React Query, browser localStorage for selected deterministic workflows |
+| Mapping | Leaflet and React Leaflet |
+| Charts and motion | Recharts and Framer Motion |
+| Optional connected data | Supabase client integration |
+| Testing | Vitest and Testing Library |
 
-### AI Techniques Used
-- **Computer Vision** for satellite image analysis
-- **NDVI / EVI computation** for vegetation health
-- **Predictive modeling** for heat stress estimation
-- **Change detection models** for tree loss alerts
-- **LLM-assisted planning agents** for recommendation generation
-
-### Agentic Workflow (Planned)
-- Vision Agent → Detects vegetation change
-- Correlation Agent → Links green loss with heat rise
-- Strategy Agent → Generates plantation plans
-
-This agent-based approach ensures decisions are **traceable, explainable, and auditable**.
-
----
-
-
-##  System Architecture 
+## Architecture
 
 ```text
-Satellite & Climate Data
-        ↓
- Spatio-Temporal Processing
-        ↓
-     AI Agent Pipeline
-        ↓
- Decision Intelligence Engine
-        ↓
- Interactive Smart City Dashboard
-
+Connected data services                  Local preview packet
+          |                                         |
+          +-----------------+-----------------------+
+                            |
+                   Data and resilience hooks
+                            |
+                  React route-level workflows
+                            |
+     Command Center | Analysis | Planning | Reports | TrustOps
+                            |
+       Reviewer, planner, or field-team next action
 ```
- 
----
 
+The application intentionally keeps the fallback behavior within the client workflow. Connected services remain preferred, but an unavailable service should not reduce the MVP to an empty or misleading screen.
 
-##  Current Project Status
-
-###  Implemented (MVP)
-- Fully functional frontend dashboard
-- Interactive map-based UI
-- Climate intelligence visualization
-- Modular architecture ready for backend integration
-
-###  In Progress / Planned
-- Real satellite data ingestion
-- NDVI & heat model inference
-- Backend APIs (FastAPI)
-- AI agent orchestration
-- Automated reports & alerts
-- User roles (Govt / NGO / Public)
-
-> **Note:** The current version is a working prototype demonstrating system design, workflow, and UI. AI outputs are partially simulated for MVP demonstration.
-
----
-
-##  Tech Stack
-
-### Frontend
-- Next.js
-- Interactive Maps
-- Data Visualization (charts & overlays)
-
-### Backend (Planned)
-- FastAPI / Django Ninja
-- PostgreSQL + PostGIS
-- Redis (caching)
-- Background workers (Celery / Cloud Tasks)
-
-### AI / ML
-- Python
-- Computer Vision (satellite imagery)
-- Geospatial analysis
-- Predictive modeling
-- LLM-assisted planning agents
-
-### Deployment
-- Cloud-native (Serverless-ready)
-- Scalable to city and state level
-
----
-
-##  Installation & Local Development
+## Local Development
 
 ### Prerequisites
 
-Ensure your development environment meets the following requirements:
+Install a current LTS version of Node.js and npm. A Supabase project is optional for local-preview development; it is required only if you want the application to use connected Supabase data.
 
-- **Node.js**: Version 18.x or 20.x (recommended)
-- **npm**: Version 9.x or later
-- **Git**: For version control
-- **Supabase Account**: For backend services (optional for frontend-only development)
+### Quick start
 
-### Quick Start
-
-1. **Clone the Repository**
-   ```bash
-   git clone https://github.com/hitakshijoshi20072911/Delhi-Canopy-Sambhav.git
-   cd Delhi-Canopy-Sambhav
-   ```
-
-2. **Install Dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Environment Configuration**
-   
-   Create a `.env` file in the project root:
-   ```env
-   # Supabase Configuration (required for full functionality)
-   VITE_SUPABASE_URL=your_supabase_project_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-   
-   # Optional: API Endpoints
-   VITE_API_BASE_URL=http://localhost:3001
-   ```
-
-4. **Start Development Server**
-   ```bash
-   npm run dev
-   ```
-
-   The application will be available at `http://localhost:5173`
-
-### Build & Production Deployment
-
-#### Local Production Build
-
-1. **Build for Production**
-   ```bash
-   npm run build
-   ```
-
-2. **Preview Production Build**
-   ```bash
-   npm run preview
-   ```
-
-   The production build will be served at `http://localhost:4173`
-
-#### Vercel Deployment
-
-1. **Connect Repository**
-   - Sign in to [Vercel Dashboard](https://vercel.com/dashboard)
-   - Click "Add New..." → "Project"
-   - Import the `Delhi-Canopy-Sambhav` repository
-
-2. **Configure Build Settings**
-   ```
-   Framework Preset: Vite
-   Build Command: npm run build
-   Output Directory: dist
-   Install Command: npm install
-   Node.js Version: 18.x or 20.x
-   ```
-
-3. **Environment Variables**
-   Add the same environment variables from your `.env` file to Vercel's environment settings.
-
-4. **Deploy**
-   Click "Deploy" to initiate the build and deployment process.
-
-#### Alternative Deployment Options
-
-**Netlify:**
 ```bash
-# Build command
+git clone https://github.com/RidhimaKulashriz/Delhi-Canopy-Sambhav.git
+cd Delhi-Canopy-Sambhav
+npm install
+npm run dev
+```
+
+Vite prints the local development URL in the terminal, commonly `http://localhost:5173`.
+
+### Optional connected-service configuration
+
+Create a local `.env` file only when connecting Supabase or another supported service. Do not commit secrets.
+
+```env
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_API_BASE_URL=http://localhost:3001
+```
+
+Without these values, the application remains usable through the documented local-preview path where applicable.
+
+## Scripts
+
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Starts the Vite development server. |
+| `npm run build` | Creates a production build in `dist/`. |
+| `npm run build:dev` | Builds in development mode. |
+| `npm run preview` | Serves the production build locally. |
+| `npm run test` | Runs the Vitest suite once. |
+| `npm run test:watch` | Runs Vitest in watch mode. |
+| `npm run lint` | Runs ESLint across the project. |
+
+## Validation Workflow
+
+Run the following before a release or demonstration update.
+
+```bash
 npm run build
-
-# Publish directory
-dist
+npm run test
 ```
 
-**Docker Deployment:**
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY . .
-RUN npm run build
-EXPOSE 4173
-CMD ["npm", "run", "preview"]
-```
+For user-facing checks, open the routes listed above and verify the following actions:
 
-### Development Workflow
+| Workflow | Minimum check |
+| --- | --- |
+| Reports | Export a built-in CSV, generate a custom report, then export it. |
+| AI Planner | Confirm the ward selector is available, generate a strategy, and open **View Full Plan**. |
+| Planting Space Finder | Switch candidates, complete evidence checks, and copy a field brief. |
+| TrustOps | Run the demo packet, approve only after readiness reaches `100/100`, copy the audit receipt, then reset. |
+| Governance | Verify empty input is rejected; save a non-sensitive local draft and inspect its receipt. |
+| Command Center | Use **View Full Analysis** and **View All Alerts** to confirm route handoffs. |
 
-#### Available Scripts
+The most recent route and interaction audit is available in [FEATURE_RELIABILITY_AUDIT.md](./FEATURE_RELIABILITY_AUDIT.md).
 
-- `npm run dev` - Start development server with hot reload
-- `npm run build` - Build for production
-- `npm run build:dev` - Build in development mode
-- `npm run preview` - Preview production build locally
-- `npm run lint` - Run ESLint for code quality checks
-- `npm run test` - Run test suite
-- `npm run test:watch` - Run tests in watch mode
+## Deployment
 
-#### Code Quality
-
-The project includes comprehensive linting and testing configurations:
+DelhiCanopy builds as a static Vite application.
 
 ```bash
-# Lint all files
-npm run lint
-
-# Run tests
-npm run test
-
-# Watch mode for development
-npm run test:watch
+npm run build
 ```
 
-### Project Structure
+Deploy the resulting `dist/` directory on a static-hosting provider such as Vercel, Netlify, or another provider configured for single-page application fallback routing. Add environment variables in the hosting provider only if using connected services. The project should remain operational in local-preview mode when those optional services are unavailable.
 
-```
+## Project Structure
+
+```text
 Delhi-Canopy-Sambhav/
-├── public/                 # Static assets
+├── public/                         Static application assets
 ├── src/
-│   ├── components/        # Reusable UI components
-│   │   ├── ui/           # Base UI components (shadcn/ui)
-│   │   ├── charts/       # Data visualization components
-│   │   ├── dashboard/    # Dashboard-specific components
-│   │   └── map/          # Map-related components
-│   ├── pages/            # Route components
-│   ├── hooks/            # Custom React hooks
-│   ├── services/         # API service layers
-│   ├── integrations/     # External service integrations
-│   ├── data/            # Mock data and constants
-│   └── lib/             # Utility functions
-├── supabase/            # Supabase configuration and functions
-└── dist/               # Production build output
+│   ├── components/                  Reusable interface, dashboard, map, chart, and AI components
+│   ├── data/                        Deterministic local-preview records and constants
+│   ├── hooks/                       Data loading, resilience, and interaction hooks
+│   ├── integrations/                External service integration modules
+│   ├── lib/                         Shared utilities and decision helpers
+│   ├── pages/                       Route-level product workflows
+│   ├── services/                    API and data-service layer
+│   └── App.tsx                      Route registration
+├── supabase/                        Optional Supabase configuration and functions
+├── FEATURE_RELIABILITY_AUDIT.md     Reproducible feature-audit record
+├── PLANTING_DECISION_SOURCES.md     Planting-screening sources and boundaries
+├── ROUND2_DEMO_SCRIPT.md            Short quality-gate demonstration script
+└── TRUSTOPS_DEMO.md                 TrustOps workflow documentation
 ```
 
-### Troubleshooting
+## Safety, Data, and Decision Boundaries
 
-#### Common Issues
+DelhiCanopy is intended to support discussion, prioritization, and review. It does not issue permits, allocate municipal land, submit government grievances, confirm unlawful activity, or validate a production AI model. Tree-loss alerts, planting candidates, credibility scores, environmental trends, and local-preview outputs must be reviewed with appropriate source data, field visits, competent professionals, and the relevant authorities.
 
-1. **Build Failures**
-   ```bash
-   # Clear cache and reinstall
-   rm -rf node_modules package-lock.json
-   npm install
-   ```
+The planting-screening workflow is explicitly documented as preliminary in [PLANTING_DECISION_SOURCES.md](./PLANTING_DECISION_SOURCES.md). The TrustOps workflow similarly measures readiness of the documented process rather than legal compliance or field truth.
 
-2. **Environment Variable Issues**
-   - Ensure all required variables are set in `.env`
-   - Restart development server after environment changes
+## Contribution Guidance
 
-3. **Supabase Connection Errors**
-   - Verify Supabase URL and keys are correct
-   - Check Supabase project status and network connectivity
+Keep changes additive and preserve existing routes, working interactions, local-preview behavior, and the X-Tech visual treatment. New claims about environmental data, permissions, enforcement, or public authority action should include an appropriate provenance and safety boundary. For user-visible workflow changes, add or update a reproducible validation note in the reliability audit.
 
-#### Performance Optimization
+## Reference Documents
 
-- Use `npm run build:dev` for faster development builds
-- Enable source maps in development for debugging
-- Monitor bundle size with build output warnings
-
-### Contributing Guidelines
-
-1. **Branch Strategy**
-   - `main` - Production-ready code
-   - `develop` - Integration branch
-   - `feature/*` - Feature-specific branches
-
-2. **Code Standards**
-   - Follow ESLint configuration
-   - Use TypeScript for type safety
-   - Write tests for new features
-
-3. **Commit Convention**
-   ```
-   feat: Add new feature
-   fix: Bug fix
-   docs: Documentation update
-   refactor: Code refactoring
-   test: Test additions/modifications
-   ```
-
----
-
-##  Impact & Use Cases
-
-### For Government & Planners
-- Data-backed plantation planning
-- Heat-risk mitigation strategies
-- Optimized allocation of resources
-
-### For Cities
-- Reduced heat stress
-- Improved air quality
-- Climate-resilient urban design
-
-### System-Level Impact
-Moves urban governance from:
-> **Reactive environmental response → Predictive climate intelligence**
-
----
-
-##  Future Scope
-
-- IoT-based air quality sensors
-- Drone-based green cover mapping
-- Citizen participation apps
-- Carbon credit estimation
-- Climate resilience simulations
-
----
-
-##  Disclaimer
-
-DelhiCanopy is developed as part of an innovation and hackathon initiative.  
-Data sources and AI models may use simulated datasets in early stages and are designed to be replaceable with real-world integrations.
-
----
-
-## 🌱 Vision
-
-DelhiCanopy aims to become the **digital nervous system for urban green governance**, enabling smarter, cooler, and more livable cities through AI-driven environmental intelligence.
-
----
-
+| Document | Purpose |
+| --- | --- |
+| [FEATURE_RELIABILITY_AUDIT.md](./FEATURE_RELIABILITY_AUDIT.md) | Records reproducible route, interaction, export, and fallback checks. |
+| [TRUSTOPS_DEMO.md](./TRUSTOPS_DEMO.md) | Explains the repeatable TrustOps decision-quality workflow. |
+| [ROUND2_DEMO_SCRIPT.md](./ROUND2_DEMO_SCRIPT.md) | Provides a concise judge-facing demonstration sequence. |
+| [PLANTING_DECISION_SOURCES.md](./PLANTING_DECISION_SOURCES.md) | Defines the planting-screening sources, evidence requirements, and non-permit boundary. |
+| [PROJECT_AUDIT.md](./PROJECT_AUDIT.md) | Tracks preservation and validation context for additive MVP changes. |
