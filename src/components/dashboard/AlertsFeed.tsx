@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { 
   AlertTriangle, 
@@ -37,6 +38,7 @@ const severityIconColors = {
 };
 
 export function AlertsFeed() {
+  const navigate = useNavigate();
   const { alerts: apiAlerts, isLoading } = useAlerts(20);
   
   // Transform API alerts to match expected format, fall back to mock data
@@ -93,13 +95,14 @@ export function AlertsFeed() {
           const formattedTime = format(parseISO(alert.timestamp), 'HH:mm');
           
           return (
-            <motion.div
+            <motion.button
               key={alert.id}
+              onClick={() => navigate("/tree-loss")}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3, delay: index * 0.1 }}
               className={cn(
-                "relative p-3 rounded-lg border transition-all duration-200 cursor-pointer",
+                "relative w-full p-3 rounded-lg border text-left transition-all duration-200 cursor-pointer",
                 "hover:scale-[1.02] group",
                 severityColors[alert.severity]
               )}
@@ -148,13 +151,13 @@ export function AlertsFeed() {
 
                 <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
-            </motion.div>
+            </motion.button>
           );
         })}
       </div>
 
       {/* View All Button */}
-      <button className="w-full mt-4 py-2 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 transition-all duration-200 text-xs font-medium text-muted-foreground hover:text-foreground">
+      <button onClick={() => navigate("/tree-loss")} className="w-full mt-4 py-2 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 transition-all duration-200 text-xs font-medium text-muted-foreground hover:text-foreground">
         View All Alerts
       </button>
     </motion.div>

@@ -29,7 +29,7 @@ export function FloatingAIAssistant() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   
-  const { messages, isLoading, error, sendMessage, clearMessages } = useCanopyAI();
+  const { messages, isLoading, error, sendMessage, clearMessages, isLocalPreview } = useCanopyAI();
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
@@ -96,7 +96,7 @@ export function FloatingAIAssistant() {
                         isLoading ? "bg-yellow-500 animate-pulse" : "bg-primary animate-pulse"
                       )} />
                       <span className="text-[10px] text-muted-foreground font-tech">
-                        {isLoading ? "Thinking..." : "Online"}
+                        {isLoading ? "Thinking..." : isLocalPreview ? "Local preview" : "Ready"}
                       </span>
                     </div>
                   </div>

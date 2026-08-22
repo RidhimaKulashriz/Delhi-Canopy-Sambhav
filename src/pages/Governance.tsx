@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Navigation } from "@/components/layout/Navigation";
 import { FloatingAIAssistant } from "@/components/ai/FloatingAIAssistant";
@@ -14,6 +15,7 @@ import {
   Send
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const grievances = [
   { id: 1, title: 'Illegal Tree Felling - Rohini Sector 7', status: 'investigating', priority: 'high', date: '2024-01-14' },
@@ -37,6 +39,21 @@ const statusLabels = {
 };
 
 const Governance = () => {
+  const [issueType, setIssueType] = useState("Illegal Tree Felling");
+  const [location, setLocation] = useState("");
+  const [description, setDescription] = useState("");
+  const [draftReceipt, setDraftReceipt] = useState<string | null>(null);
+
+  const handleSaveDraft = () => {
+    if (!location.trim() || !description.trim()) {
+      toast.error("Add both a location and a description before saving a local grievance draft.");
+      return;
+    }
+    const receipt = `DC-DRAFT-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${String(location.trim().length + description.trim().length).padStart(3, "0")}`;
+    setDraftReceipt(receipt);
+    toast.success("Local grievance draft saved. No government system was contacted.");
+  };
+
   return (
     <div className="min-h-screen bg-background grid-pattern">
       <Navigation />
@@ -74,12 +91,11 @@ const Governance = () => {
             <GlassCard className="p-6 glow-border text-center">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-warning/10 border border-warning/30 mb-4">
                 <Clock className="w-4 h-4 text-warning animate-pulse" />
-                <span className="text-sm font-tech text-warning">FUTURE SCOPE MODULE</span>
+                <span className="text-sm font-tech text-warning">LOCAL DRAFT MODE</span>
               </div>
-              <h2 className="text-xl font-display font-bold mb-2">Governance Integration Coming Soon</h2>
+              <h2 className="text-xl font-display font-bold mb-2">Evidence-ready grievance drafting</h2>
               <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
-                This module will enable direct integration with Delhi government systems for 
-                automated grievance submission, authority routing, and transparent action tracking.
+                Save a structured local draft with a receipt for a team handoff. This prototype does not transmit grievances to a government system or create an official case.
               </p>
             </GlassCard>
           </motion.div>
@@ -119,7 +135,7 @@ const Governance = () => {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-xs font-tech text-muted-foreground uppercase">Issue Type</label>
-                  <select className="w-full px-3 py-2 rounded-lg bg-card/50 border border-border/50 text-sm focus:border-primary/30 focus:outline-none">
+                  <select value={issueType} onChange={(event) => setIssueType(event.target.value)} className="w-full px-3 py-2 rounded-lg bg-card/50 border border-border/50 text-sm focus:border-primary/30 focus:outline-none">
                     <option>Illegal Tree Felling</option>
                     <option>Heat Hazard</option>
                     <option>Green Space Violation</option>
@@ -132,6 +148,8 @@ const Governance = () => {
                   <input 
                     type="text" 
                     placeholder="Enter ward/area"
+                    value={location}
+                    onChange={(event) => setLocation(event.target.value)}
                     className="w-full px-3 py-2 rounded-lg bg-card/50 border border-border/50 text-sm placeholder:text-muted-foreground focus:border-primary/30 focus:outline-none"
                   />
                 </div>
@@ -141,6 +159,8 @@ const Governance = () => {
                   <textarea 
                     rows={3}
                     placeholder="Describe the issue..."
+                    value={description}
+                    onChange={(event) => setDescription(event.target.value)}
                     className="w-full px-3 py-2 rounded-lg bg-card/50 border border-border/50 text-sm placeholder:text-muted-foreground focus:border-primary/30 focus:outline-none resize-none"
                   />
                 </div>
@@ -151,14 +171,15 @@ const Governance = () => {
                     <span className="text-xs font-medium text-primary">AI Evidence Attached</span>
                   </div>
                   <p className="text-[10px] text-muted-foreground">
-                    Satellite imagery and analytics will be automatically attached as evidence.
+                    A local evidence reference is included in this draft. Confirm official channels and evidence requirements before submitting externally.
                   </p>
                 </div>
 
-                <button className="w-full py-3 rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary font-medium text-sm transition-all flex items-center justify-center gap-2">
+                <button onClick={handleSaveDraft} className="w-full py-3 rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary font-medium text-sm transition-all flex items-center justify-center gap-2">
                   <Send className="w-4 h-4" />
-                  Submit Grievance
+                  Save Local Draft
                 </button>
+                {draftReceipt && <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs text-muted-foreground"><p className="font-tech text-primary">DRAFT RECEIPT · {draftReceipt}</p><p className="mt-1">{issueType} · {location}. Stored only in this browser session; no authority was contacted.</p></div>}
               </div>
             </GlassCard>
 
@@ -167,9 +188,9 @@ const Governance = () => {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <FileCheck className="w-4 h-4 text-secondary" />
-                  <h3 className="text-sm font-display font-semibold">GRIEVANCE TRACKER</h3>
+                  <h3 className="text-sm font-display font-semibold">EXAMPLE WORKFLOW TRACKER</h3>
                 </div>
-                <span className="text-xs text-muted-foreground font-tech">{grievances.length} Active</span>
+                <span className="text-xs text-muted-foreground font-tech">{grievances.length} Example records</span>
               </div>
 
               <div className="space-y-3">

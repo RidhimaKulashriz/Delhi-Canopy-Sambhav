@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAIInsights } from "@/hooks/useDashboardData";
@@ -16,6 +17,7 @@ import {
 } from "lucide-react";
 
 export function AIInsightPanelLive() {
+  const navigate = useNavigate();
   const { insights, isLoading, error, refresh } = useAIInsights();
   const [currentInsight, setCurrentInsight] = useState(0);
   const [displayedText, setDisplayedText] = useState("");
@@ -72,6 +74,7 @@ export function AIInsightPanelLive() {
   };
 
   const CategoryIcon = categoryIcons[insight.category] || Brain;
+  const analysisRoute = insight.category.includes("Heat") || insight.category.includes("Climate") ? "/heat-stress" : "/green-intelligence";
 
   return (
     <motion.div
@@ -185,7 +188,7 @@ export function AIInsightPanelLive() {
           </div>
 
           {/* Action Button */}
-          <button className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/30 transition-all duration-200 group">
+          <button onClick={() => navigate(analysisRoute)} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/30 transition-all duration-200 group">
             <span className="text-xs font-medium text-primary">View Full Analysis</span>
             <ChevronRight className="w-4 h-4 text-primary group-hover:translate-x-1 transition-transform" />
           </button>

@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { kpiData, monthlyHeatData, plantationRecommendations, recentAlerts, wardData } from "@/data/mockData";
 
 interface Report {
   id: number;
@@ -31,20 +32,43 @@ interface Report {
 }
 
 const Reports = () => {
-  const { wards, alerts, kpis, climateTrends, plantationPlans, isSeeded } = useDashboardData();
+  const { wards, alerts, kpis, climateTrends, plantationPlans, dataMode } = useDashboardData();
   const [generatingReport, setGeneratingReport] = useState<number | null>(null);
+  const [customReport, setCustomReport] = useState<Report | null>(null);
 
   const currentDate = new Date();
   const monthYear = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
-  const reports: Report[] = [
+  const exportWards = wards.length > 0 ? wards : wardData.map((ward) => ({
+    name: ward.name,
+    zone: "Delhi",
+    green_cover_percent: ward.greenCover,
+    heat_index: ward.heatIndex,
+    risk_score: ward.riskScore,
+    priority: ward.priority,
+    population: 110000,
+  }));
+  const exportAlerts = alerts.length > 0 ? alerts : recentAlerts.map((alert) => ({
+    ...alert,
+    alert_type: alert.type,
+    location_description: alert.ward,
+    detected_at: alert.timestamp,
+    is_active: true,
+    wards: { name: alert.ward },
+  }));
+  const exportKpis = kpis.length > 0 ? kpis : kpiData;
+  const exportClimate = climateTrends.length > 0 ? climateTrends : monthlyHeatData;
+  const exportPlans = plantationPlans.length > 0 ? plantationPlans : plantationRecommendations;
+  const sourceLabel = dataMode === "live" ? "Connected data" : "Local preview data";
+
+  const baseReports: Report[] = [
     {
       id: 1,
       title: 'Monthly Green Cover Analysis',
       type: 'Vegetation Report',
       date: monthYear,
       status: 'ready',
-      pages: wards.length > 0 ? Math.ceil(wards.length / 2) + 4 : 24,
+      pages: Math.ceil(exportWards.length / 2) + 4,
       dataType: 'wards'
     },
     {
@@ -53,7 +77,7 @@ const Reports = () => {
       type: 'Climate Report',
       date: monthYear,
       status: 'ready',
-      pages: climateTrends.length > 0 ? 18 : 18,
+      pages: Math.max(8, Math.ceil(exportClimate.length / 2) + 4),
       dataType: 'climate'
     },
     {
@@ -62,7 +86,7 @@ const Reports = () => {
       type: 'Enforcement Report',
       date: `Week ${Math.ceil(currentDate.getDate() / 7)}, ${currentDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`,
       status: 'ready',
-      pages: alerts.filter(a => a.alert_type === 'tree_loss').length > 0 ? 12 : 12,
+      pages: Math.max(4, exportAlerts.filter(a => a.alert_type === 'tree_loss').length + 3),
       dataType: 'alerts'
     },
     {
@@ -70,8 +94,8 @@ const Reports = () => {
       title: 'AI Plantation Recommendations',
       type: 'Strategy Report',
       date: `Q${Math.ceil((currentDate.getMonth() + 1) / 3)} ${currentDate.getFullYear()}`,
-      status: plantationPlans.length > 0 ? 'ready' : 'generating',
-      pages: plantationPlans.length > 0 ? plantationPlans.length * 2 + 8 : null,
+      status: 'ready',
+      pages: exportPlans.length * 2 + 4,
       dataType: 'plans'
     },
     {
@@ -80,38 +104,41 @@ const Reports = () => {
       type: 'Analytics Report',
       date: monthYear,
       status: 'ready',
-      pages: wards.length > 0 ? wards.length + 10 : 32,
+      pages: exportWards.length + 4,
       dataType: 'wards'
     },
   ];
+  const reports = customReport ? [...baseReports, customReport] : baseReports;
 
-  const generateCSV = (reportType: string, data: any[]) => {
+  const csvValue = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+
+  const generateCSV = (reportType: Report['dataType']) => {
     let csvContent = "";
     
-    if (reportType === 'wards' && wards.length > 0) {
+    if (reportType === 'wards') {
       csvContent = "Ward Name,Zone,Green Cover %,Heat Index,Risk Score,Priority,Population\n";
-      wards.forEach(w => {
-        csvContent += `"${w.name}","${w.zone}",${w.green_cover_percent},${w.heat_index},${w.risk_score},${w.priority},${w.population || 'N/A'}\n`;
+      exportWards.forEach(w => {
+        csvContent += `${csvValue(w.name)},${csvValue(w.zone)},${w.green_cover_percent},${w.heat_index},${w.risk_score},${csvValue(w.priority)},${w.population || 'N/A'}\n`;
       });
     } else if (reportType === 'alerts') {
       csvContent = "Alert ID,Type,Severity,Ward,Message,Detected At,Active\n";
-      alerts.forEach(a => {
-        csvContent += `"${a.id}","${a.alert_type}","${a.severity}","${a.wards?.name || a.location_description}","${a.message}","${a.detected_at}",${a.is_active}\n`;
+      exportAlerts.forEach(a => {
+        csvContent += `${csvValue(a.id)},${csvValue(a.alert_type)},${csvValue(a.severity)},${csvValue(a.wards?.name || a.location_description)},${csvValue(a.message)},${csvValue(a.detected_at)},${a.is_active}\n`;
       });
     } else if (reportType === 'climate') {
       csvContent = "Month,Average Temp,Heat Index,Green Cover %\n";
-      climateTrends.forEach(t => {
-        csvContent += `"${t.month}",${t.avgTemp},${t.heatIndex},${t.greenCover}\n`;
+      exportClimate.forEach(t => {
+        csvContent += `${csvValue(t.month)},${t.avgTemp},${t.heatIndex},${t.greenCover}\n`;
       });
     } else if (reportType === 'plans') {
       csvContent = "Ward,Priority,Required Trees,Heat Reduction,CO2 Offset,Estimated Cost\n";
-      plantationPlans.forEach(p => {
-        csvContent += `"${p.ward}","${p.priority}",${p.requiredTrees},${p.heatReduction},${p.carbonOffset},"${p.estimatedCost}"\n`;
+      exportPlans.forEach(p => {
+        csvContent += `${csvValue(p.ward)},${csvValue(p.priority)},${p.requiredTrees},${p.heatReduction},${p.carbonOffset},${csvValue(p.estimatedCost)}\n`;
       });
     } else if (reportType === 'kpis') {
       csvContent = "Metric,Value,Unit,Trend,Status\n";
-      kpis.forEach(k => {
-        csvContent += `"${k.label}",${k.value},"${k.unit}","${k.trend}","${k.status}"\n`;
+      exportKpis.forEach(k => {
+        csvContent += `${csvValue(k.label)},${k.value},${csvValue(k.unit)},${csvValue(k.trend)},${csvValue(k.status)}\n`;
       });
     }
 
@@ -120,10 +147,8 @@ const Reports = () => {
 
   const handleDownloadCSV = (report: Report) => {
     setGeneratingReport(report.id);
-    
-    setTimeout(() => {
-      const csvContent = generateCSV(report.dataType, []);
-      
+    window.setTimeout(() => {
+      const csvContent = generateCSV(report.dataType);
       if (csvContent) {
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
@@ -133,17 +158,26 @@ const Reports = () => {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        URL.revokeObjectURL(url);
         toast.success(`${report.title} downloaded successfully!`);
       } else {
-        toast.error("No data available for this report. Please initialize the database first.");
+        toast.error("The report packet could not be prepared. Please refresh and try again.");
       }
       
       setGeneratingReport(null);
-    }, 1000);
+    }, 250);
   };
 
   const handlePrintReport = (report: Report) => {
-    // Create a printable summary
+    const csvContent = generateCSV(report.dataType);
+    if (!csvContent) {
+      toast.error("The printable report packet could not be prepared.");
+      return;
+    }
+
+    const printableRows = csvContent.trim().split("\n").map((line) =>
+      `<tr>${line.split(",").map((cell) => `<td>${cell.replace(/^"|"$/g, "").replace(/""/g, '"')}</td>`).join("")}</tr>`
+    ).join("");
     let content = `
       <html>
         <head>
@@ -172,48 +206,14 @@ const Reports = () => {
               <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
             </div>
           </div>
+          <p><strong>Data mode:</strong> ${sourceLabel}</p>
+          <table>${printableRows}</table>
     `;
-
-    if (report.dataType === 'wards' && wards.length > 0) {
-      content += `
-        <h2>Ward Summary (${wards.length} Wards)</h2>
-        <table>
-          <tr><th>Ward</th><th>Zone</th><th>Green Cover</th><th>Heat Index</th><th>Risk Score</th><th>Priority</th></tr>
-          ${wards.slice(0, 20).map(w => `
-            <tr>
-              <td>${w.name}</td>
-              <td>${w.zone}</td>
-              <td>${w.green_cover_percent?.toFixed(1)}%</td>
-              <td>${w.heat_index}</td>
-              <td>${w.risk_score}</td>
-              <td><span class="badge ${w.priority}">${w.priority.toUpperCase()}</span></td>
-            </tr>
-          `).join('')}
-        </table>
-      `;
-    } else if (report.dataType === 'alerts') {
-      const treeLossAlerts = alerts.filter(a => a.alert_type === 'tree_loss');
-      content += `
-        <h2>Active Alerts (${alerts.length} Total, ${treeLossAlerts.length} Tree Loss)</h2>
-        <table>
-          <tr><th>Type</th><th>Severity</th><th>Location</th><th>Message</th><th>Time</th></tr>
-          ${alerts.slice(0, 15).map(a => `
-            <tr>
-              <td>${a.alert_type.replace('_', ' ').toUpperCase()}</td>
-              <td><span class="badge ${a.severity}">${a.severity.toUpperCase()}</span></td>
-              <td>${a.wards?.name || a.location_description}</td>
-              <td>${a.message}</td>
-              <td>${new Date(a.detected_at).toLocaleString()}</td>
-            </tr>
-          `).join('')}
-        </table>
-      `;
-    }
 
     content += `
           <div class="footer">
             <p>This report was generated by DelhiCanopy AI Intelligence Platform</p>
-            <p>Data is ${isSeeded ? 'from live database' : 'simulated for demonstration purposes'}</p>
+            <p>Data source: ${sourceLabel}.</p>
           </div>
         </body>
       </html>
@@ -224,7 +224,23 @@ const Reports = () => {
       printWindow.document.write(content);
       printWindow.document.close();
       printWindow.print();
+      toast.success(`${report.title} opened in a print view.`);
+    } else {
+      toast.error("The print window was blocked by the browser.");
     }
+  };
+
+  const handleGenerateCustomReport = () => {
+    setCustomReport({
+      id: 6,
+      title: 'Climate Decision Readiness Summary',
+      type: 'Custom Analytics Report',
+      date: monthYear,
+      status: 'ready',
+      pages: 2,
+      dataType: 'kpis',
+    });
+    toast.success('Custom local report generated and ready to export.');
   };
 
   return (
@@ -249,7 +265,7 @@ const Reports = () => {
                   <span className="text-muted-foreground">REPORTS</span>
                 </h1>
                 <p className="text-xs text-muted-foreground font-tech">
-                  {isSeeded ? 'Live Data Reports' : 'Auto-Generated Analytics'} • CSV Export • Print Support
+                  {sourceLabel} • CSV Export • Print Support
                 </p>
               </div>
             </div>
@@ -258,10 +274,10 @@ const Reports = () => {
           {/* Quick Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {[
-              { label: 'Total Wards', value: wards.length > 0 ? String(wards.length) : '47', icon: MapPin, color: 'text-primary' },
-              { label: 'Active Alerts', value: String(alerts.filter(a => a.is_active).length || 12), icon: Calendar, color: 'text-destructive' },
-              { label: 'Data Points', value: isSeeded ? '2.4M' : '1.2M', icon: BarChart3, color: 'text-warning' },
-              { label: 'Plans Generated', value: String(plantationPlans.length || 15), icon: TrendingUp, color: 'text-secondary' },
+              { label: 'Total Wards', value: String(exportWards.length), icon: MapPin, color: 'text-primary' },
+              { label: 'Active Alerts', value: String(exportAlerts.filter(a => a.is_active).length), icon: Calendar, color: 'text-destructive' },
+              { label: 'Climate Records', value: String(exportClimate.length), icon: BarChart3, color: 'text-warning' },
+              { label: 'Plans Ready', value: String(exportPlans.length), icon: TrendingUp, color: 'text-secondary' },
             ].map((stat, idx) => (
               <motion.div
                 key={stat.label}
@@ -355,13 +371,13 @@ const Reports = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: reports.length * 0.1 }}
             >
-              <div className="h-full min-h-[200px] rounded-xl border-2 border-dashed border-border/50 flex flex-col items-center justify-center p-6 hover:border-primary/30 transition-colors cursor-pointer group">
+              <button onClick={handleGenerateCustomReport} className="h-full min-h-[200px] w-full rounded-xl border-2 border-dashed border-border/50 flex flex-col items-center justify-center p-6 hover:border-primary/30 transition-colors group text-left">
                 <div className="w-12 h-12 rounded-xl bg-card/50 flex items-center justify-center mb-3 group-hover:bg-primary/10 transition-colors">
                   <TrendingUp className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
                 <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Generate New Report</span>
                 <span className="text-xs text-muted-foreground/60 font-tech mt-1">Custom Analytics</span>
-              </div>
+              </button>
             </motion.div>
           </div>
 
@@ -373,9 +389,9 @@ const Reports = () => {
             </div>
             <div className="space-y-3">
               {[
-                { action: 'System initialized with live data', time: isSeeded ? 'Active' : 'Pending', user: 'System' },
-                { action: `${wards.length || 47} wards analyzed`, time: 'Real-time', user: 'AI Engine' },
-                { action: `${alerts.length || 25} alerts processed`, time: 'Last 24h', user: 'Detection System' },
+                { action: `${sourceLabel} packet ready for export`, time: 'Ready', user: 'System' },
+                { action: `${exportWards.length} wards analyzed`, time: 'Current packet', user: 'AI Engine' },
+                { action: `${exportAlerts.length} alerts included`, time: 'Current packet', user: 'Detection System' },
               ].map((activity, idx) => (
                 <div
                   key={idx}
@@ -384,7 +400,7 @@ const Reports = () => {
                   <div className="flex items-center gap-3">
                     <div className={cn(
                       "w-2 h-2 rounded-full",
-                      idx === 0 && isSeeded ? "bg-primary" : idx === 0 ? "bg-warning" : "bg-primary"
+                      "bg-primary"
                     )} />
                     <span className="text-sm">{activity.action}</span>
                   </div>
