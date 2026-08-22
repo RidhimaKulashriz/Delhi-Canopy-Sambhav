@@ -30,6 +30,7 @@ interface DashboardData {
   plantationPlans: PlantationPlan[];
   isLoading: boolean;
   isSeeded: boolean;
+  dataMode: "live" | "local-preview" | "unavailable";
   error: string | null;
 }
 
@@ -46,6 +47,7 @@ export function useDashboardData(): DashboardData & {
     plantationPlans: [],
     isLoading: true,
     isSeeded: false,
+    dataMode: "unavailable",
     error: null,
   });
 
@@ -55,15 +57,7 @@ export function useDashboardData(): DashboardData & {
     try {
       // Check if database is seeded
       const status = await checkDatabaseStatus();
-      
-      if (!status.seeded) {
-        setData((prev) => ({
-          ...prev,
-          isLoading: false,
-          isSeeded: false,
-        }));
-        return;
-      }
+      const isLocalPreview = status.counts?.mode === "local-preview" || !status.seeded;
 
       // Fetch all data in parallel
       const [wards, alerts, kpis, insights, climateTrends, plantationPlans] = await Promise.all([
@@ -83,7 +77,10 @@ export function useDashboardData(): DashboardData & {
         climateTrends,
         plantationPlans,
         isLoading: false,
+        // A complete fallback packet is actionable for preview mode even when the
+        // external seed-status endpoint reports no database records.
         isSeeded: true,
+        dataMode: isLocalPreview ? "local-preview" : "live",
         error: null,
       });
     } catch (error) {
@@ -91,6 +88,7 @@ export function useDashboardData(): DashboardData & {
       setData((prev) => ({
         ...prev,
         isLoading: false,
+        dataMode: "unavailable",
         error: error instanceof Error ? error.message : "Failed to load data",
       }));
     }
