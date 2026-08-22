@@ -1,3 +1,4 @@
+// X-Tech interaction note: preserve the existing command-center hierarchy and neon telemetry language; functional fallbacks must not alter its visual system.
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Navigation } from "@/components/layout/Navigation";
@@ -73,9 +74,11 @@ const AIPlanner = () => {
     setIsCalculating(true);
     
     try {
+      const selectedWardRecord = wards.find((ward) => ward.id === selectedWard);
       const result = await generatePlantationPlan(selectedWard, {
         landType,
         urbanDensity: density[0],
+        wardName: selectedWardRecord?.name,
       });
 
       if (result && result.plan) {
