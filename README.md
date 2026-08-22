@@ -24,6 +24,7 @@ The current MVP contains a working set of connected decision workflows rather th
 | Reports | Generates built-in and custom local reports, creates downloadable CSV files, and provides a browser-print flow. | Printing uses the browser's native print dialog and must be completed manually. |
 | Governance | Validates and stores a local grievance draft with a visible receipt. | The prototype does not transmit grievances to a government system. |
 | Canopy AI assistant | Provides connected-service responses when available and deterministic local-preview responses otherwise. | Local-preview replies are demonstrative and clearly identified. |
+| DELHICANOPY DRIFT companion | Links from the Command Center to a separate buildable pole-mounted air-quality field-instrument prototype. | DRIFT demonstration telemetry does not automatically feed this dashboard. |
 
 ## Application Routes
 
@@ -80,6 +81,19 @@ The Reports route supports a built-in set of environmental and planning report t
 | Print report | Opens a print-ready browser flow; completion occurs in the browser or operating-system print dialog. |
 
 The reliability audit confirmed both CSV generation and downloaded artifact contents in local-preview mode. Do not treat a CSV export as an official government report without appropriate data provenance and review.
+
+## Related Field Instrument: DELHICANOPY DRIFT
+
+[DELHICANOPY DRIFT](https://delhicanopydrift.vercel.app/) is a related public field-instrument prototype linked from the DelhiCanopy Command Center. It presents a buildable, pole-mounted air-quality node with a clamp-based enclosure, a USB-first build path, firmware and hardware-kit references, mounting guidance, a Tinkercad model, and a visible demonstration telemetry interface.
+
+| Field-instrument element | DELHICANOPY DRIFT scope |
+| --- | --- |
+| Environmental channels | PM1, PM2.5, PM10, and NO₂ demonstration channels. |
+| Field form factor | Pole-mounted node with a two-clamp cradle design. |
+| Build workflow | Hardware package, ESP32 firmware, circuit simulator, mounting protocol, and 3D-model handoff. |
+| Demonstration display | Street-visible OLED and LED-bar concept with simulated telemetry. |
+
+The two sites are intentionally separate. DelhiCanopy provides the climate-intelligence and decision workflow; DRIFT presents the physical field-node concept and build documentation. DRIFT is currently presented in demonstration mode, and its displayed telemetry does not automatically become a live data source in DelhiCanopy. Any real deployment requires sensor calibration, safe electrical design, site approval, communications security, and validated ingestion before it can inform operational decisions.
 
 ## Technology Stack
 
