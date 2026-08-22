@@ -10,7 +10,7 @@ import { FloatingAIAssistant } from "@/components/ai/FloatingAIAssistant";
 import { ChartErrorBoundary } from "@/components/ui/ChartErrorBoundary";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { kpiData as fallbackKpis } from "@/data/mockData";
-import { Satellite, Radio, Cpu, Signal, Database, RefreshCw, Loader2, Shield } from "lucide-react";
+import { Satellite, Radio, Cpu, Signal, Database, RefreshCw, Loader2, Shield, RadioTower, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Index = () => {
@@ -148,6 +148,39 @@ const Index = () => {
               <KPICard key={kpi.label} {...kpi} delay={index} />
             ))}
           </div>
+
+          {/* Related field-instrument companion */}
+          <motion.section
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.15 }}
+            className="mb-6 overflow-hidden rounded-xl border border-primary/30 bg-card/50"
+            aria-labelledby="drift-companion-title"
+          >
+            <div className="grid gap-5 p-5 lg:grid-cols-[1fr_auto] lg:items-center">
+              <div className="min-w-0">
+                <div className="mb-2 flex items-center gap-2 text-primary">
+                  <RadioTower className="h-4 w-4" />
+                  <span className="font-tech text-[10px] uppercase tracking-[0.2em]">Field Instrument Companion</span>
+                </div>
+                <h2 id="drift-companion-title" className="font-display text-xl font-bold tracking-wide text-foreground">
+                  DELHICANOPY <span className="text-primary">DRIFT</span>
+                </h2>
+                <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+                  Explore the separate buildable, pole-mounted air-quality field node for street-level PM1, PM2.5, PM10, and NO₂ demonstration channels, mounting guidance, 3D model, firmware, and build kit.
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  DRIFT is an independent field-instrument prototype. Its demo telemetry does not automatically become live data in this dashboard.
+                </p>
+              </div>
+              <Button asChild className="shrink-0 gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+                <a href="https://delhicanopydrift.vercel.app/" target="_blank" rel="noreferrer">
+                  Open DELHICANOPY DRIFT
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </Button>
+            </div>
+          </motion.section>
 
           {/* Main Grid */}
           <div className="grid lg:grid-cols-3 gap-6 mb-6">
