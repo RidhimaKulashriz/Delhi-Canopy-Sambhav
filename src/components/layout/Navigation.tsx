@@ -14,7 +14,8 @@ import {
   ChevronDown,
   Satellite,
   Activity,
-  MapPinned
+  MapPinned,
+  ShieldCheck
 } from "lucide-react";
 
 const navItems = [
@@ -24,6 +25,7 @@ const navItems = [
   { path: '/tree-loss', label: 'Tree Loss Detection', icon: AlertOctagon },
   { path: '/ai-planner', label: 'AI Planner', icon: Brain },
   { path: '/planting-space-finder', label: 'Planting Spaces', icon: MapPinned },
+  { path: '/trustops', label: 'TrustOps Gate', icon: ShieldCheck },
   { path: '/reports', label: 'Reports', icon: FileText },
   { path: '/governance', label: 'Governance', icon: Building2 },
   { path: '/how-it-works', label: 'How It Works', icon: HelpCircle },
