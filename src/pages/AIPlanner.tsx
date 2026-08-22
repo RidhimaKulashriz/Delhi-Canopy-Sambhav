@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { wardData } from "@/data/mockData";
 
 interface PlanResult {
   ward: string;
@@ -40,23 +41,31 @@ interface PlanResult {
   reasoning?: string;
 }
 
+const localPlannerWards = wardData.map((ward) => ({
+  id: `ward-${ward.id}`,
+  name: ward.name,
+  zone: "Delhi",
+}));
+
 const AIPlanner = () => {
   const { wards, isLoading: wardsLoading } = useWards();
   const { plans: existingPlans, isLoading: plansLoading, refresh: refreshPlans } = usePlantationPlans(10);
   
-  const [selectedWard, setSelectedWard] = useState<string>("");
+  const [selectedWard, setSelectedWard] = useState<string>(localPlannerWards[0]?.id ?? "");
   const [landType, setLandType] = useState("mixed_urban");
   const [density, setDensity] = useState([65]);
   const [isCalculating, setIsCalculating] = useState(false);
   const [generatedPlan, setGeneratedPlan] = useState<PlanResult | null>(null);
   const [allPlans, setAllPlans] = useState<PlanResult[]>([]);
+  const [focusedPlan, setFocusedPlan] = useState<PlanResult | null>(null);
+  const plannerWards = wards.length > 0 ? wards : localPlannerWards;
 
   // Set initial ward when wards load
   useEffect(() => {
-    if (wards.length > 0 && !selectedWard) {
-      setSelectedWard(wards[0].id);
+    if (plannerWards.length > 0 && !selectedWard) {
+      setSelectedWard(plannerWards[0].id);
     }
-  }, [wards, selectedWard]);
+  }, [plannerWards, selectedWard]);
 
   // Transform existing plans from API
   useEffect(() => {
@@ -74,7 +83,7 @@ const AIPlanner = () => {
     setIsCalculating(true);
     
     try {
-      const selectedWardRecord = wards.find((ward) => ward.id === selectedWard);
+      const selectedWardRecord = plannerWards.find((ward) => ward.id === selectedWard);
       const result = await generatePlantationPlan(selectedWard, {
         landType,
         urbanDensity: density[0],
@@ -97,6 +106,7 @@ const AIPlanner = () => {
         };
 
         setGeneratedPlan(newPlan);
+        setFocusedPlan(newPlan);
         setAllPlans(prev => [newPlan, ...prev.filter(p => p.ward !== newPlan.ward)]);
         toast.success("AI Strategy Generated Successfully!");
       }
@@ -106,6 +116,11 @@ const AIPlanner = () => {
     } finally {
       setIsCalculating(false);
     }
+  };
+
+  const handleViewFullPlan = (plan: PlanResult) => {
+    setFocusedPlan(plan);
+    toast.success(`${plan.ward} plan detail opened.`);
   };
 
   const displayPlans = allPlans.length > 0 ? allPlans.slice(0, 5) : [
@@ -172,7 +187,7 @@ const AIPlanner = () => {
                   <span className="text-muted-foreground">PLANTATION PLANNER</span>
                 </h1>
                 <p className="text-xs text-muted-foreground font-tech">
-                  Neural Strategy Engine • Multi-Agent Analysis • {wards.length > 0 ? `${wards.length} Wards Connected` : 'Optimal Tree Placement'}
+                  Neural Strategy Engine • Multi-Agent Analysis • {plannerWards.length} Wards Connected
                 </p>
               </div>
             </div>
@@ -192,23 +207,16 @@ const AIPlanner = () => {
                   <label className="text-xs font-tech text-muted-foreground uppercase tracking-wider">
                     Select Ward / Area
                   </label>
-                  <Select value={selectedWard} onValueChange={setSelectedWard} disabled={wardsLoading}>
+                  <Select value={selectedWard} onValueChange={setSelectedWard}>
                     <SelectTrigger className="bg-card/50 border-border/50">
-                      <SelectValue placeholder={wardsLoading ? "Loading wards..." : "Select ward"} />
+                      <SelectValue placeholder="Select ward" />
                     </SelectTrigger>
                     <SelectContent className="bg-card border-border max-h-60">
-                      {wards.map((ward) => (
+                      {plannerWards.map((ward) => (
                         <SelectItem key={ward.id} value={ward.id}>
                           {ward.name} ({ward.zone})
                         </SelectItem>
                       ))}
-                      {wards.length === 0 && (
-                        <>
-                          <SelectItem value="ward-19">Ward 19 - Karol Bagh</SelectItem>
-                          <SelectItem value="ward-32">Ward 32 - Shahdara</SelectItem>
-                          <SelectItem value="ward-8">Ward 8 - Central Delhi</SelectItem>
-                        </>
-                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -329,6 +337,26 @@ const AIPlanner = () => {
                 </motion.div>
               )}
 
+              {focusedPlan && (
+                <GlassCard className="p-5 border-primary/30 bg-primary/5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-[10px] font-tech text-primary">PLAN DETAIL · LOCAL OR CONNECTED PACKET</p>
+                      <h3 className="mt-1 font-display text-lg font-bold">{focusedPlan.ward} implementation brief</h3>
+                      <p className="mt-2 text-sm text-muted-foreground">{focusedPlan.reasoning ?? `Prioritise ${focusedPlan.requiredTrees} starts across verified planting pockets, then track survival and heat reduction outcomes.`}</p>
+                    </div>
+                    <button onClick={() => setFocusedPlan(null)} className="text-xs font-tech text-muted-foreground hover:text-primary">CLOSE</button>
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-muted-foreground md:grid-cols-4">
+                    <span><b className="text-foreground">Timeline:</b> {focusedPlan.timeline ?? "Field screen → monsoon planting → survival monitoring"}</span>
+                    <span><b className="text-foreground">Land type:</b> {focusedPlan.landType}</span>
+                    <span><b className="text-foreground">Priority:</b> {focusedPlan.priority}</span>
+                    <span><b className="text-foreground">Budget:</b> {focusedPlan.estimatedCost}</span>
+                  </div>
+                  {focusedPlan.species && focusedPlan.species.length > 0 && <p className="mt-3 text-xs text-muted-foreground"><b className="text-foreground">Species packet:</b> {focusedPlan.species.join(", ")}</p>}
+                </GlassCard>
+              )}
+
               {/* AI Recommendations */}
               {displayPlans.map((rec, idx) => (
                 <motion.div
@@ -434,7 +462,7 @@ const AIPlanner = () => {
                       <span className="text-sm text-muted-foreground font-tech">
                         Estimated Cost: <span className="text-foreground font-bold">{rec.estimatedCost}</span>
                       </span>
-                      <button className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors">
+                      <button onClick={() => handleViewFullPlan(rec)} className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors">
                         View Full Plan
                         <ChevronRight className="w-4 h-4" />
                       </button>

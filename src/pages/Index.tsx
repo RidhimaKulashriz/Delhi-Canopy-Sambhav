@@ -18,6 +18,7 @@ const Index = () => {
     kpis, 
     isLoading, 
     isSeeded, 
+    dataMode,
     error, 
     initializeDatabase,
     refresh 
@@ -49,11 +50,11 @@ const Index = () => {
                       <div className="absolute inset-0 w-2 h-2 rounded-full bg-primary animate-ping" />
                     </div>
                     <span className="text-[10px] font-tech text-primary uppercase tracking-wider">
-                      {isLoading ? "Syncing..." : isSeeded ? "System Online" : "Awaiting Init"}
+                      {isLoading ? "Syncing..." : dataMode === "live" ? "System Online" : dataMode === "local-preview" ? "Preview Ready" : "Data Unavailable"}
                     </span>
                   </div>
                   <span className="text-[10px] font-tech text-muted-foreground">
-                    • {isSeeded ? "Real-time data active" : "Mock data mode"}
+                    • {dataMode === "live" ? "Connected data active" : dataMode === "local-preview" ? "Local preview packet active" : "No data packet available"}
                   </span>
                 </div>
                 <h1 className="text-3xl lg:text-4xl font-display font-bold mb-2 tracking-wide">
@@ -67,7 +68,7 @@ const Index = () => {
 
               {/* System Status */}
               <div className="flex items-center gap-3 flex-wrap">
-                {!isSeeded && !isLoading && (
+                {!isSeeded && !isLoading && dataMode === "unavailable" && (
                   <Button
                     onClick={initializeDatabase}
                     className="gap-2 bg-primary/20 border border-primary/30 hover:bg-primary/30"
@@ -112,7 +113,7 @@ const Index = () => {
           </motion.div>
 
           {/* Database Initialization Banner */}
-          {!isSeeded && !isLoading && (
+          {!isSeeded && !isLoading && dataMode === "unavailable" && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -189,7 +190,7 @@ const Index = () => {
             className="mt-8 p-4 rounded-lg bg-card/30 border border-border/30 text-center"
           >
             <p className="text-xs text-muted-foreground font-tech">
-              <span className="text-primary">⚠</span> This is an AI-powered MVP using {isSeeded ? "simulated satellite & climate datasets" : "mock data"} to demonstrate how AI-driven urban green intelligence would function in real deployments.
+              <span className="text-primary">⚠</span> This is an AI-powered MVP using {dataMode === "live" ? "connected project datasets" : dataMode === "local-preview" ? "a local demonstration packet" : "a limited interface state"} to demonstrate how urban green intelligence workflows would function in real deployments.
             </p>
           </motion.div>
         </div>
